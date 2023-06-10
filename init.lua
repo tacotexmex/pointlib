@@ -1,13 +1,5 @@
 -- Create public mod table
-pointlib = {
-    hud = {
-        itemstring = {},
-        description = {}
-    }
-}
-
--- Check mod settings
-local show_itemstring = minetest.settings:get_bool("pointlib.show_itemstring") ~= false
+pointlib = {}
 
 -- Check for custom hand range
 local range = minetest.registered_items[""].range or 4
@@ -37,7 +29,7 @@ local function visible(node, player)
     return true
 end
 
--- Check for closest visible node in ray and update HUD accordingly
+-- Check for closest visible node in ray
 function pointlib.update(player)
     -- Get player eyeheight
     local eye_height = player:get_properties().eye_height or 1.625
@@ -77,17 +69,6 @@ function pointlib.update(player)
             break
         end
     end
-    -- If both itemstring and description, update HUD
-    if itemstring ~= "" and minetest.registered_items[itemstring].description ~= "" then
-        -- Get node description
-        description = minetest.registered_items[itemstring].description
-    end
-    -- Update itemstring HUD if setting is true
-    if show_itemstring then
-        player:hud_change(pointlib.hud.itemstring[name], "text", itemstring)
-    end
-    -- Update description HUD
-    player:hud_change(pointlib.hud.description[name], "text", description)
     -- Execute on_point functions in pointed node's definition
     if itemstring ~= "" and minetest.registered_nodes[itemstring].on_point then
         minetest.registered_nodes[itemstring].on_point(pos, player, node_pos)
@@ -98,60 +79,3 @@ function pointlib.update(player)
         ["pos"] = node_pos
     }
 end
-
--- Create HUD for new players
-minetest.register_on_joinplayer(function(player)
-    local name = player:get_player_name()
-    -- Create HUD element for node description
-    pointlib.hud.description[name] = player:hud_add({
-        name = "pointlib:description",
-        position = {
-            x = 0.5,
-            y = 0
-        },
-        hud_elem_type = "text",
-        number = 0xFFFFFF,
-        alignment = 0,
-        offset = {
-            x = 0,
-            y = 34
-        },
-        text = ""
-    })
-    if show_itemstring then
-        -- Create HUD element for node name
-        pointlib.hud.itemstring[name] = player:hud_add({
-            name = "pointlib:name",
-            position = {
-                x = 0.5,
-                y = 0
-            },
-            hud_elem_type = "text",
-            number = 0xE5E5E5,
-            alignment = 0,
-            offset = {
-                x = 0,
-                y = 54
-            },
-            text = ""
-        })
-    end
-end)
-
--- Create timer variable
-local timer = 0
--- Create loop for updating frequency
-minetest.register_globalstep(function(dtime)
-    -- Iterate on timer with past time
-    timer = timer + dtime
-    -- Do things when 200 milliseconds have passed
-    if timer > 0.2 then
-        -- Check for all online players
-        for _, player in pairs(minetest:get_connected_players()) do
-            -- Update all player's HUDs
-            pointlib.update(player)
-        end
-        -- Reset timer
-        timer = 0
-    end
-end)
