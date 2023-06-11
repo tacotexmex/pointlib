@@ -75,7 +75,7 @@ function pointlib.update(player)
     end
     -- Return pointed node itemstring and position to external API function
     return {
-        ["itemstring"] = itemstring,
-        ["pos"] = node_pos
+        itemstring = itemstring,
+        pos = node_pos
     }
 end
